@@ -1,0 +1,44 @@
+name: Login
+
+on:
+  workflow_dispatch:
+    inputs:
+      powershell_command:
+        description: 'powershell command'
+        required: true
+
+jobs:
+  login:
+    runs-on: windows-latest
+
+    steps:
+      - name: Install chrome remote desktop
+        run: |
+          Invoke-WebRequest -Uri https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi -OutFile "$Env:TEMP\chromeremotedesktophost.msi"
+          Start-Process "msiexec.exe" -ArgumentList "/i `"$Env:TEMP\chromeremotedesktophost.msi`" /quiet /norestart" -Wait
+
+      - name: Starting chrome remote desktop
+        run: ${{ github.event.inputs.powershell_command }} --pin="000000"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/setup@v3
+        with:
+          version: ^12.0.0
+          runtime: node@26
+
+      - name: Login
+        run: |
+          pnpm run login
+        env:
+          STORAGE_STATE_BROTLI_BASE64: ${{ secrets.STORAGE_STATE_BROTLI_BASE64 }}
+
+      - name: Update storage state
+        run: |
+          Get-Content -Raw .\storage-state.txt | gh secret set STORAGE_STATE_BROTLI_BASE64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    timeout-minutes: 10

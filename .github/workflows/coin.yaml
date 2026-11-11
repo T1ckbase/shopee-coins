@@ -1,0 +1,47 @@
+name: Coin
+
+on:
+  workflow_dispatch:
+    inputs:
+      save_screenshot:
+        description: 'save screenshot'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '0 8 * * *'
+
+jobs:
+  coin:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/setup@v3
+        with:
+          version: ^12.0.0
+          runtime: node@26
+
+      - name: Coin
+        run: |
+          pnpm run coin
+        env:
+          STORAGE_STATE_BROTLI_BASE64: ${{ secrets.STORAGE_STATE_BROTLI_BASE64 }}
+
+      - name: Update storage state
+        run: |
+          Get-Content -Raw .\storage-state.txt | gh secret set STORAGE_STATE_BROTLI_BASE64
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Upload screenshot
+        if: ${{ always() && inputs.save_screenshot }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot
+          path: ./screenshot.png
+          if-no-files-found: ignore
+
+    timeout-minutes: 10
