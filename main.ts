@@ -33,8 +33,7 @@ const page = await context.newPage();
 await page.goto('https://shopee.tw/buyer/login?next=https%3A%2F%2Fshopee.tw%2Fshopee-coins', { waitUntil: 'load' });
 
 if (args.includes('login')) {
-  await page.waitForURL((url) => url.pathname.startsWith('/shopee-coins'), { timeout: 0, waitUntil: 'load' });
-  await page.waitForTimeout(5000);
+  await page.waitForEvent('close', { timeout: 0 });
 } else {
   try {
     try {
