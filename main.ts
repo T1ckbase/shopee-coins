@@ -13,24 +13,13 @@ const storageState = encoded
   ? JSON.parse(brotliDecompressSync(Buffer.from(encoded, 'base64')).toString('utf8'))
   : undefined;
 
-// // if (process.env.STORAGE_STATE_BROTLI_BASE64 !== undefined) {
-// // const bytes = Uint8Array.fromBase64(process.env.STORAGE_STATE_BROTLI_BASE64);
-// const base64 = await readFile('storage-state.txt', 'utf8');
-// const storageStateJson = brotliDecompressSync(Buffer.from(base64, 'base64')).toString('utf8');
-// // const storageState = await new Response(
-// //   new Response(bytes).body!.pipeThrough(new DecompressionStream('brotli')),
-// // ).text();
-// console.log(storageStateJson);
-// process.exit();
-// // }
-
 const browser = await chromium.launch({
-  channel: 'chrome',
+  channel: 'msedge',
   headless: false,
   args: ['--disable-blink-features=AutomationControlled'],
 });
 const context = await browser.newContext({
-  ...devices['Desktop Chrome'],
+  ...devices['Desktop Edge'],
   colorScheme: 'dark',
   // viewport: { width: 1920, height: 1080 },
   viewport: null,
@@ -45,8 +34,7 @@ await page.goto('https://shopee.tw/buyer/login?next=https%3A%2F%2Fshopee.tw%2Fsh
 
 if (args.includes('login')) {
   await page.waitForURL((url) => url.pathname.startsWith('/shopee-coins'), { timeout: 0, waitUntil: 'load' });
-  await page.reload();
-  await page.waitForURL((url) => url.pathname.startsWith('/shopee-coins'), { timeout: 15_000, waitUntil: 'load' });
+  await page.waitForTimeout(5000);
 } else {
   try {
     try {
@@ -79,17 +67,3 @@ await writeFile('storage-state.txt', base64);
 
 await context.close();
 await browser.close();
-
-// {
-//   const storageState = await readFile('storage-state.json', 'utf8');
-//   const minified = JSON.stringify(JSON.parse(storageState));
-//   const base64 = brotliCompressSync(minified, {
-//     params: { [constants.BROTLI_PARAM_MODE]: constants.BROTLI_MODE_TEXT },
-//   }).toString('base64');
-//   // const encoder = new TextEncoder();
-//   // const bytes = encoder.encode(storageState);
-//   // const base64 = new Uint8Array(
-//   //   await new Response(new Response(bytes).body!.pipeThrough(new CompressionStream('brotli'))).arrayBuffer(),
-//   // ).toBase64();
-//   await writeFile('storage-state.txt', base64);
-// }
