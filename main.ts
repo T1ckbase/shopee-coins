@@ -52,6 +52,12 @@ if (args.includes('login')) {
     await page.locator('div:has(> a[href="/coins"]) button').click();
 
     await page.waitForTimeout(10_000);
+
+    const coins = await page
+      .locator('a[href="/coins"] p')
+      .textContent({ timeout: 5000 })
+      .catch(() => 'unknown');
+    console.log(`coins: ${coins}`);
   } finally {
     await page.screenshot({ path: 'screenshot.png', fullPage: true }).catch(() => {});
   }
